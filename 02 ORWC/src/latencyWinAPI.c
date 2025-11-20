@@ -20,7 +20,7 @@ double read_latency(Stopwatch *sw, HANDLE h) {
     ReadFile(h, buffer, 4, &read, NULL);
     double read_latency = elapsed_microseconds(sw);
     reset(sw);
-    return read_latency;
+    return read == 4 ? read_latency : -1.0;
 }
 
 double write_latency(Stopwatch *sw, HANDLE h) {
@@ -30,7 +30,7 @@ double write_latency(Stopwatch *sw, HANDLE h) {
     //FlushFileBuffers(h);
     double write_latency = elapsed_microseconds(sw);
     reset(sw);
-    return write_latency;
+    return written == 4 ? write_latency : -1.0;
 }
 
 void run_iterations(int iterations, Stopwatch *sw, const char *filename, const char *outfile) {
@@ -40,8 +40,17 @@ void run_iterations(int iterations, Stopwatch *sw, const char *filename, const c
         printf("Error opening output file\n");
         return;
     }
-    fprintf(file, "Run,Open (µs),Write (µs),Read (µs),Close (µs)\n");
-    
+    fprintf(file, "Run,Open,Write,Read,Close\n");
+    HANDLE h = CreateFileA(
+            filename,
+            GENERIC_READ | GENERIC_WRITE,
+            0,
+            NULL,
+            CREATE_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL,
+            NULL
+    );
+    CloseHandle(h);
     for (int i = 0; i < iterations; i++) {
         start(sw);
         HANDLE h = CreateFileA(
@@ -49,7 +58,7 @@ void run_iterations(int iterations, Stopwatch *sw, const char *filename, const c
             GENERIC_READ | GENERIC_WRITE,
             0,
             NULL,
-            CREATE_ALWAYS,
+            OPEN_EXISTING,
             FILE_ATTRIBUTE_NORMAL,
             NULL
         );
@@ -61,15 +70,16 @@ void run_iterations(int iterations, Stopwatch *sw, const char *filename, const c
         
         fprintf(file, "%d,%.3f,%.3f,%.3f,%.3f\n", i + 1, open, write, read, close);
         
-        remove(filename);
+        //remove(filename);
     }
+    remove(filename);
     fclose(file); 
 }
 
 int main() {
     Stopwatch sw = stopwatch();
     const char *tempFileName = "tempfile.txt";
-    const char *outfile = "latency_c.csv";
+    const char *outfile = "../Results/latencyWinAPIc.csv";
     int iterations = 100000;
     printf("Measuring file operation latencies over %d iterations each.\n", iterations);
     run_iterations(iterations, &sw, tempFileName, outfile);

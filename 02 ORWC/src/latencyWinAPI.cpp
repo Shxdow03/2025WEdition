@@ -44,7 +44,17 @@ void measure_orwc_pipeline(Stopwatch &sw, int iterations, const char *tempfile, 
         cerr << "Error opening output file" << endl;
         return;
     }
-    csv << "Run,Open (µs),Write (µs),Read (µs),Close (µs)" << endl;
+    HANDLE h = CreateFileA(
+            tempfile,
+            GENERIC_READ | GENERIC_WRITE,
+            0,
+            NULL,
+            CREATE_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL,
+            NULL
+        );
+    CloseHandle(h);
+    csv << "Run,Open,Write,Read,Close" << endl;
     for (int i = 0; i < iterations; i++) {
         sw.start();
         HANDLE h = CreateFileA(
@@ -52,7 +62,7 @@ void measure_orwc_pipeline(Stopwatch &sw, int iterations, const char *tempfile, 
             GENERIC_READ | GENERIC_WRITE,
             0,
             NULL,
-            CREATE_ALWAYS,
+            OPEN_EXISTING,
             FILE_ATTRIBUTE_NORMAL,
             NULL
         );
@@ -63,8 +73,8 @@ void measure_orwc_pipeline(Stopwatch &sw, int iterations, const char *tempfile, 
         close = measure_close_latency(sw, h);
         csv << i + 1 << "," << fixed << setprecision(3) 
             << open << "," << write << "," << read << "," << close << endl;
-        remove(tempfile);
     }
+    remove(tempfile);
     csv.close();
 }
 
@@ -72,7 +82,7 @@ int main() {
     Stopwatch sw;
     int iterations = 100000;
     const char *tempfile = "tempfile.txt";
-    const char *outfile="latency_win.csv";
+    const char *outfile="../Results/latencyWinAPIc++.csv";
     cout << "Measuring file operation latencies over " << iterations << " iterations each." << endl;
     measure_orwc_pipeline(sw, iterations, tempfile, outfile);
     cout << "Finished." << endl;

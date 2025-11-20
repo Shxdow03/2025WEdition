@@ -48,22 +48,24 @@ void run_iterations(int iterations, Stopwatch &sw, fstream &fs, const char *file
         cerr << "Error opening output file" << endl;
         return;
     }
-    csv << "Run,Open (µs),Write (µs),Read (µs),Close (µs)" << endl;
+    fs.open(filename, ios::in | ios::out | ios::trunc);
+    fs.close();
+    csv << "Run,Open,Write,Read,Close" << endl;
     for (int i = 0; i < iterations; i++) {
         open = open_latency(sw, fs, filename);
         write = write_latency(sw, fs);
         read = read_latency(sw, fs);
         close = close_latency(sw, fs);
         csv << i + 1 << "," << open << "," << write << "," << read << "," << close << endl;
-        remove(filename);
     }
+    remove(filename);
     csv.close(); 
 }
 
 int main() {
     Stopwatch sw;
     const char *tempFileName="tempfile.txt";
-    const char *outfile = "latency.csv";
+    const char *outfile = "../Results/latencyFstream.csv";
     fstream fs;
     int iterations = 100000;
     cout << "Measuring file operation latencies over " << iterations << " iterations each." << endl;
