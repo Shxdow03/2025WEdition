@@ -26,8 +26,8 @@ double read_latency(Stopwatch &sw, fstream &fs) {
 
 double write_latency(Stopwatch &sw, fstream &fs) {
     sw.start();
-    fs.write("Test", 4);
-    fs.flush();
+    fs.write("Test", 4); // Beide Befehle werden
+    fs.flush(); // in der WinAPI über WriteFile abgedeckt
     double write_latency = sw.elapsed_microseconds();
     sw.reset();
     return write_latency;
@@ -35,7 +35,7 @@ double write_latency(Stopwatch &sw, fstream &fs) {
 
 double open_latency(Stopwatch &sw, fstream &fs, const char *filename) {
     sw.start();
-    fs.open(filename, ios::in | ios::out | ios::trunc);
+    fs.open(filename, ios::in | ios::out); // | ios::trunc
     double open_latency = sw.elapsed_microseconds();
     sw.reset();
     return open_latency;

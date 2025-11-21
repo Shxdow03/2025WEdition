@@ -12,7 +12,7 @@ void start(Stopwatch *sw) {
 }
 
 void reset(Stopwatch *sw) {
-    sw->start_time_ = (LARGE_INTEGER){0};
+    sw->elapsed_ = (LARGE_INTEGER){0};
     sw->is_running_ = false;
 }
 
