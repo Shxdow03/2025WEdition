@@ -1,0 +1,16 @@
+services:
+  santa:
+    build: .
+    command: python -u DockerChristmas/santa.py
+
+  reindeer:
+    build: .
+    command: python -u DockerChristmas/reindeer.py
+    deploy:
+      replicas: 9
+
+  elf:
+    build: .
+    command: python -u DockerChristmas/elf.py
+    deploy:
+      replicas: 12
