@@ -1,16 +1,16 @@
 services:
   santa:
     build: .
-    command: python -u DockerChristmas/santa.py
+    command: python -u DockerChristmasPubSub/santa.py #DockerChristmasPubSub/DockerChristmasDealerRouter
 
   reindeer:
     build: .
-    command: python -u DockerChristmas/reindeer.py
+    command: python -u DockerChristmasPubSub/reindeer.py #DockerChristmasPubSub/DockerChristmasDealerRouter
     deploy:
       replicas: 9
 
   elf:
     build: .
-    command: python -u DockerChristmas/elf.py
+    command: python -u DockerChristmasPubSub/elf.py #DockerChristmasPubSub/DockerChristmasDealerRouter
     deploy:
-      replicas: 12
+      replicas: 8
