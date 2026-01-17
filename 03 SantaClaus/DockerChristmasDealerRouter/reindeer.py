@@ -13,14 +13,13 @@ sent = False
 
 while True:
     if not sent:
-        print(f"Reindeer with id {rID} arrived from the south pole.")
+        print(f"Reindeer with id {rID} arrived from the south pole.", flush=True)
         dealer.send_multipart([b"",json.dumps({"type": "reindeer", "id": rID}).encode()])
         sent = True
     msg = dealer.recv_multipart()
     msg = json.loads(msg[0].decode())
-    time.sleep(0.1)
     if msg["action"] == "reindeer_go" and rID in msg.get("id", ""):
-        print(f"Reindeer with {rID} was succesfully hitched.")
-        time.sleep(random.randint(3,5))
+        dealer.send_multipart([b"",json.dumps({"type": "ackReindeer", "id": rID, "seqReindeer": msg.get("seqReindeer", "")}).encode()])
+        time.sleep(5)
         sent = False
         continue

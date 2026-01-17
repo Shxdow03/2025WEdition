@@ -14,14 +14,13 @@ sent = False
 
 while True:
     if not sent:
-        print(f"Elf with id {eID} needs help")
+        print(f"Elf with id {eID} needs help", flush=True)
         dealer.send_multipart([b"", json.dumps({"type": "elf", "id": eID}).encode()])
         sent = True
     msg = dealer.recv_multipart()
     msg = json.loads(msg[0].decode())
-    time.sleep(0.1)
     if msg["action"] == "elves_help" and eID in msg.get("id", ""):
-        print(f"Helping elf with id {eID}")
-        time.sleep(random.randint(3, 5))
+        dealer.send_multipart([b"", json.dumps({"type": "ackElf", "id": eID, "seqElf": msg.get("seqElf", "")}).encode()])
+        time.sleep(5)
         sent = False
         continue
