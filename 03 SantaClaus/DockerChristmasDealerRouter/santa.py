@@ -1,10 +1,8 @@
 import zmq
-import time
 import json
 from collections import deque
 
 context = zmq.Context()
-
 router = context.socket(zmq.ROUTER)
 router.bind("tcp://*:2222")
 
@@ -25,18 +23,18 @@ while True:
     id_, empty, msg = router.recv_multipart()
     msg = json.loads(msg.decode())
 
-    if msg["type"] == "reindeer":
-        reindeers.append((id_, msg["id"]))
-        print(f"Number of reindeers that have arrived from the south pole: {len(reindeers)}/9 (Reindeer: {msg["id"]})")
-    elif msg["type"] == "elf":
-        elves.append((id_, msg["id"]))
-        print(f"Number of elves that request help: {len(elves)}/3 (Elf: {msg["id"]})")
-    elif msg["type"] == "ackReindeer":
+    if msg.get("type", "") == "reindeer":
+        reindeers.append((id_, msg.get("id", "")))
+        print(f"Number of reindeers that have arrived from the south pole: {len(reindeers)}/9 (Reindeer: {msg.get("id", "")})")
+    elif msg.get("type", "") == "elf":
+        elves.append((id_, msg.get("id", "")))
+        print(f"Number of elves that request help: {len(elves)}/3 (Elf: {msg.get("id", "")})")
+    elif msg.get("type", "") == "ackReindeer":
         ackReindeer += 1
         print(f"{msg.get("seqReindeer", "")} Reindeer with {msg.get("id", "")} was succesfully hitched.")
-    elif msg["type"] == "ackElf":
+    elif msg.get("type", "") == "ackElf":
         ackElf += 1
-        print(f"{msg.get("seqElf")}: Helping elf with id {msg.get("id", "")}")
+        print(f"{msg.get("seqElf", "")}: Helping elf with id {msg.get("id", "")}")
 
     if not processingReindeers and len(reindeers) >= 9:
         processingReindeers = True

@@ -1,11 +1,9 @@
-import random
 import zmq
 import time
 import socket
 import json
 
 context = zmq.Context()
-
 dealer = context.socket(zmq.DEALER)
 eID = socket.gethostname()
 dealer.connect("tcp://santa:2222")
@@ -19,7 +17,7 @@ while True:
         sent = True
     msg = dealer.recv_multipart()
     msg = json.loads(msg[0].decode())
-    if msg["action"] == "elves_help" and eID in msg.get("id", ""):
+    if msg.get("action", "") == "elves_help" and eID in msg.get("id", ""):
         dealer.send_multipart([b"", json.dumps({"type": "ackElf", "id": eID, "seqElf": msg.get("seqElf", "")}).encode()])
         time.sleep(5)
         sent = False
