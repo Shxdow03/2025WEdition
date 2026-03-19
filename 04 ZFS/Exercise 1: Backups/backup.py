@@ -4,7 +4,7 @@ import subprocess
 from datetime import datetime
 
 _retentionArg = sys.argv[1:] or [5]
-_folderArg = sys.argv[2:] or ["zpool_for-saving/save-me"]
+_sourceArg = sys.argv[2:] or ["zpool_for-saving/save-me"]
 _backupArg = sys.argv[3:] or ["zpool_for-backups/backups"]
 
 try:
@@ -13,18 +13,18 @@ except ValueError:
     print("Given Argument wasn't a number, defaulting to 5.")
     _retentionCount = 5
 
-_folderToBeSaved = _folderArg[0]
-_backupFolder = _backupArg[0]
+_datasetToBeSaved = _sourceArg[0]
+_backupDataset = _backupArg[0]
 
-if not os.path.exists(os.path.join("/"+_folderToBeSaved)):
+if not os.path.exists(os.path.join("/"+_datasetToBeSaved)):
     raise ValueError(
-        f"Source {_folderToBeSaved} doesn't exist.\n"
+        f"Source {_datasetToBeSaved} doesn't exist.\n"
         f"Please create the pool/dataset before attempting a backup."
     )
 
-if not os.path.exists(os.path.join("/"+_backupFolder)):
+if not os.path.exists(os.path.join("/"+_backupDataset)):
     raise ValueError(
-        f"Destination {_backupFolder} doesn't exist.\n"
+        f"Destination {_backupDataset} doesn't exist.\n"
         f"Please create the pool/dataset before attempting a backup."
     )
 
@@ -32,10 +32,10 @@ def get_retention_count():
     return _retentionCount
 
 def get_folder_to_save():
-    return _folderToBeSaved
+    return _datasetToBeSaved
 
 def get_backup_folder():
-    return _backupFolder
+    return _backupDataset
 
 def run_shell_command(command):
     commandResult = subprocess.run(command, shell=True, text=True, capture_output=True)

@@ -2,15 +2,22 @@ import threading
 import subprocess
 import time
 import os
+import sys
 import random
 from common import run_shell_command, run
 
-_DATASET = "zpool_for-saving/save-me"
+_datasetArg = sys.argv[1:] or ["zpool_for-saving/save-me"]
+_DATASET = _datasetArg[0]
 _FILE_PATH = f"/{_DATASET}/fullConsistency.bin"
 _SNAPSHOT_NAME = "fullConsistency"
-
 _BLOCK_SIZE = 1024 * 1024
 _iterations = 200
+
+if not os.path.exists(os.path.join("/"+_DATASET)):
+    raise ValueError(
+        f"{_DATASET} doesn't exist.\n"
+        f"Please create the pool/dataset before attempting a snapshot."
+    )
 
 snapshot_event = threading.Event()
 
@@ -27,7 +34,6 @@ def write_file():
         f.flush()
         os.fsync(f.fileno())
     snapshot_event.set()
-
 
 def take_snapshot():
     try:
