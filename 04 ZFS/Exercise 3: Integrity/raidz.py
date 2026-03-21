@@ -35,26 +35,47 @@ if not os.path.exists(_REPLACE_DISK):
         f"Please create the disk and DON'T use it in the raidz-setup used for the experiment."
     )
 
+def get_blocks(path):
+    numStartBlocks = run_shell_command(f"cat {path} | grep -a ': START' | wc -l")
+    numEndBlocks = run_shell_command(f"cat {path} | grep -a ': END' | wc -l")
+    print(f"Number of Start Blocks: {numStartBlocks.strip()}")
+    print(f"Number of End Blocks: {numEndBlocks.strip()}")
+
 def write_file(path):
     with open(path, "wb") as f:
+        print("Start Writing...")
         for i in range(_iterations):
             f.write(f"\nBlock {i+1}: START\n".encode())
             data = os.urandom(_BLOCK_SIZE_WRITE)
             f.write(data)
             f.write(f"\nBlock {i + 1}: END\n".encode())
+            time.sleep(0.01)
+        print("Finish Writing...")
+    get_blocks(path)
 
 def read_file(path):
+    startBlockCount = 0
+    endBlockCount = 0
     with open(path, "rb") as f:
+        print("Start Reading...")
         while True:
             data = f.read(_BLOCK_SIZE_READ)
+            if b": START" in data:
+                startBlockCount += 1
+            if b": END" in data:
+                endBlockCount += 1
             time.sleep(0.01)
             if not data:
                 break
+        print("Finish Reading...")
+    print(f"Number of Start Blocks: {startBlockCount}")
+    print(f"Number of End Blocks: {endBlockCount}")
+
 
 def crash_disk(disk):
-    time.sleep(3)
+    time.sleep(2)
     run_shell_command(f"zpool offline {_DATASET.split("/")[0]} {disk}")
-    print(f"Disk {_DISK} crashed!")
+    print(f"Disk {disk} crashed!")
 
 def run_shell_command(command):
     commandResult = subprocess.run(command, shell=True, text=True, capture_output=True)
@@ -83,7 +104,7 @@ def run_no_crash(target1):
     print("-"*20)
     print(f"Starting at: {startTime.strftime("%Y-%m-%dT%H:%M:%S")}")
     t1.start()
-    time.sleep(3)
+    time.sleep(2)
     t1.join()
     endTime = datetime.now()
     print(f"Ending at: {endTime.strftime("%Y-%m-%dT%H:%M:%S")}")

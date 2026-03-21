@@ -33,8 +33,6 @@ def run(t1, t2, dataset, snap, path):
     print("-" * 20)
     get_blocks(path)
     print("-"*20)
-    print(f"Removing {path} for upcoming rollback!")
-    run_shell_command(f"rm {path}")
     print("Rolling back with taken snapshot!")
     run_shell_command(f"zfs rollback {dataset}@{snap}")
     print(f"After rollback with {dataset}@{snap}:")

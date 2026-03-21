@@ -19,36 +19,28 @@ if not os.path.exists(os.path.join("/"+_DATASET)):
         f"Please create the pool/dataset before attempting a snapshot."
     )
 
-write_event = threading.Event()
-snapshot_event = threading.Event()
-write_event.set()
+lock = threading.Lock()
 
 def write_file():
     with open(_FILE_PATH, "wb") as f:
         for i in range(_iterations):
-            write_event.wait()
-            f.write(f"\nBlock {i+1}: START\n".encode())
-            data = os.urandom(_BLOCK_SIZE)
-            time.sleep(0.01)
-            f.write(data)
-            time.sleep(0.01)
-            f.write(f"\nBlock {i + 1}: END\n".encode())
-            f.flush()
-            os.fsync(f.fileno())
-            time.sleep(0.01)
-            snapshot_event.set()
+            with lock:
+                f.write(f"\nBlock {i+1}: START\n".encode())
+                data = os.urandom(_BLOCK_SIZE)
+                time.sleep(0.01)
+                f.write(data)
+                time.sleep(0.01)
+                f.write(f"\nBlock {i + 1}: END\n".encode())
+                f.flush()
+                os.fsync(f.fileno())
+                time.sleep(0.01)
 
 def take_snapshot():
     try:
         time.sleep(random.uniform(1, 5))
-
-        write_event.clear()
-        snapshot_event.wait()
-        snapshot_event.clear()
-
-        run_shell_command(f"zfs snapshot {_DATASET}@{_SNAPSHOT_NAME}")
-        print("Finished Snapshot!")
-        write_event.set()
+        with lock:
+            run_shell_command(f"zfs snapshot {_DATASET}@{_SNAPSHOT_NAME}")
+            print("Finished Snapshot!")
     except subprocess.CalledProcessError:
         print(f"Snapshot {_DATASET}@{_SNAPSHOT_NAME} already exists")
 
