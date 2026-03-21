@@ -17,7 +17,13 @@ _BLOCK_SIZE_READ = 1024 * 512
 _BLOCK_SIZE_WRITE = 1024 * 1024
 _iterations = 200
 
-if not os.path.exists(os.path.join("/"+_DATASET)) or len(_DATASET.split("/")) < 2:
+def run_shell_command(command):
+    commandResult = subprocess.run(command, shell=True, text=True, capture_output=True)
+    if commandResult.returncode != 0:
+        raise RuntimeError(f"There was a problem when executing {command}: {commandResult.stderr}")
+    return commandResult.stdout
+
+if not os.path.exists(run_shell_command(f"zfs get mountpoint {_DATASET} -H -o value").strip()):
     raise ValueError(
         f"{_DATASET} doesn't exist.\n"
         f"Please create the pool/dataset before attempting to interact with a file."
@@ -76,12 +82,6 @@ def crash_disk(disk):
     time.sleep(2)
     run_shell_command(f"zpool offline {_DATASET.split("/")[0]} {disk}")
     print(f"Disk {disk} crashed!")
-
-def run_shell_command(command):
-    commandResult = subprocess.run(command, shell=True, text=True, capture_output=True)
-    if commandResult.returncode != 0:
-        raise RuntimeError(f"There was a problem when executing {command}: {commandResult.stderr}")
-    return commandResult.stdout
 
 def run_crash(target1, target2, disk):
     t1 = threading.Thread(target=target1, daemon=True, args=(_FILE_PATH_CRASH,))
