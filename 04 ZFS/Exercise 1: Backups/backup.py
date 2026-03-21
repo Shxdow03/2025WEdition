@@ -9,20 +9,29 @@ _backupArg = sys.argv[3:] or ["zpool_for-backups/backups"]
 
 try:
     _retentionCount = int(_retentionArg[0])
+    if _retentionCount < 0:
+        raise ValueError
 except ValueError:
-    print("Given Argument wasn't a number, defaulting to 5.")
+    print("Given Argument wasn't a positive number, defaulting to 5.")
     _retentionCount = 5
 
 _datasetToBeSaved = _sourceArg[0]
 _backupDataset = _backupArg[0]
 
-if not os.path.exists(os.path.join("/"+_datasetToBeSaved)):
+
+def run_shell_command(command):
+    commandResult = subprocess.run(command, shell=True, text=True, capture_output=True)
+    if commandResult.returncode != 0:
+        raise RuntimeError(f"There was a problem when executing {command}: {commandResult.stderr}")
+    return commandResult.stdout
+
+if not os.path.exists(run_shell_command(f"zfs get mountpoint {_datasetToBeSaved} -H -o value").strip()):
     raise ValueError(
         f"Source {_datasetToBeSaved} doesn't exist.\n"
         f"Please create the pool/dataset before attempting a backup."
     )
 
-if not os.path.exists(os.path.join("/"+_backupDataset)):
+if not os.path.exists(run_shell_command(f"zfs get mountpoint {_backupDataset} -H -o value").strip()):
     raise ValueError(
         f"Destination {_backupDataset} doesn't exist.\n"
         f"Please create the pool/dataset before attempting a backup."
@@ -36,12 +45,6 @@ def get_folder_to_save():
 
 def get_backup_folder():
     return _backupDataset
-
-def run_shell_command(command):
-    commandResult = subprocess.run(command, shell=True, text=True, capture_output=True)
-    if commandResult.returncode != 0:
-        raise RuntimeError(f"There was a problem when executing {command}: {commandResult.stderr}")
-    return commandResult.stdout
 
 def create_snapshot(dataset, timestamp):
     try:
@@ -79,6 +82,7 @@ def delete_snapshot_overflow(dataset, retention):
                 snapshotToRemove = snapshotList.pop(0)
                 print(f"Deleting: {snapshotToRemove}")
                 run_shell_command(f"zfs destroy {snapshotToRemove}")
+
     except Exception as err:
         print(f"Deletion of snapshot overflow has failed: {err}")
 
@@ -109,7 +113,11 @@ def main():
     delete_snapshot_overflow(dest, retentionCount)
 
     # Keeping one snapshot in Source Dataset for incremental approach
-    delete_snapshot_overflow(src, 1)
+    srcRetention = 1
+    if retentionCount == 0:
+        srcRetention = 0
+
+    delete_snapshot_overflow(src, srcRetention)
 
     endTime = datetime.now()
     print(f"Finished Backup at: {endTime.strftime("%Y-%m-%dT%H:%M:%S")}")
